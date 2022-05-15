@@ -1,0 +1,43 @@
+version: '3'
+networks: 
+  lineage:
+services: 
+  nginx:
+    image: nginx:stable-alpine
+    container_name: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./laravel:/var/www/laravel
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php
+      - postgresql
+    networks:
+      - lineage
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php
+    working_dir: /var/www/laravel
+    volumes:
+      - ./laravel:/var/www/laravel
+    ports:
+      - "9000:9000"
+    networks:
+      - lineage
+  postgresql:
+    image: "mdillon/postgis:10"
+    container_name: pgsql
+    # tty: true
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=1234
+    volumes:
+      - ./my_dbdata:/var/lib/postgresql/data
+    networks: 
+      - lineage
+  
