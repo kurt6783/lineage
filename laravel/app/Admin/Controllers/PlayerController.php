@@ -52,6 +52,32 @@ class PlayerController extends Controller
         return $this->form()->store();
     }
 
+    public function show($id, Content $content)
+    {
+        return $content
+            ->title($this->title())
+            ->description($this->description()['show'] ?? trans('admin.show'))
+            ->body($this->detail($id));
+    }
+
+    public function edit($id, Content $content)
+    {
+        return $content
+            ->title($this->title())
+            ->description($this->description()['edit'])
+            ->body($this->form($id)->edit($id));
+    }
+
+    public function update($id)
+    {
+        return $this->form()->update($id);
+    }
+
+    public function destroy($id)
+    {
+        return $this->form()->destroy($id);
+    }
+
     protected function title()
     {
         return $this->title ?: admin_trans_label();
@@ -72,13 +98,6 @@ class PlayerController extends Controller
         });
     }
 
-    protected function detail($id)
-    {
-        return Show::make($id, new PlayerRepository(), function (Show $show) {
-            
-        });
-    }
-
     protected function form()
     {
         return Form::make(new PlayerRepository(), function (Form $form) {
@@ -91,6 +110,15 @@ class PlayerController extends Controller
             $form->disableCreatingCheck();
             $form->disableResetButton();
             $form->disableDeleteButton();
+        });
+    }
+
+    protected function detail($id)
+    {
+        return Show::make($id, new PlayerRepository(), function (Show $show) {
+            $show->name;
+            $show->profession;
+            $show->blood_alliance;
         });
     }
 }
