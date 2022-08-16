@@ -13,9 +13,15 @@ Route::group([
 ], function (Router $router) {
     $router->get('/', 'HomeController@index');
 
-    $router->get('/players', 'PlayerController@index');
-    $router->get('/players/create', 'PlayerController@create');
-    $router->post('/players', 'PlayerController@store');
+    Route::group(['prefix' => 'players'], function (Router $router) {
+        $router->get('/', 'PlayerController@index');
+        $router->get('/create', 'PlayerController@create');
+        $router->post('/', 'PlayerController@store');
+        $router->get('/{id}', 'PlayerController@show');
+        $router->get('/{id}/edit', 'PlayerController@edit');
+        $router->put('/{id}', 'PlayerController@update');
+        $router->delete('/{id}', 'PlayerController@destroy');
+    });
 
     $router->get('/treasure', 'TreasureController@index');
     $router->get('/treasure/create', 'TreasureController@create');
