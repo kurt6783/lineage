@@ -12,6 +12,11 @@ Route::group([
     'middleware' => config('admin.route.middleware'),
 ], function (Router $router) {
     $router->get('/', 'HomeController@index');
+
+    $router->get('/players', 'PlayerController@index');
+    $router->get('/players/create', 'PlayerController@create');
+    $router->post('/players', 'PlayerController@store');
+
     $router->get('/treasure', 'TreasureController@index');
     $router->get('/treasure/create', 'TreasureController@create');
     $router->post('/treasure', 'TreasureController@store');
