@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Dcat\Admin\Traits\HasDateTimeFormatter;
 use Illuminate\Database\Eloquent\Model;
 
 class Treasure extends Model
 {
-    use HasFactory;
+    use HasDateTimeFormatter;
 
     /**
      * The attributes that are mass assignable.
@@ -15,20 +15,27 @@ class Treasure extends Model
      * @var array<int, string>
      */
     protected $fillable = [
-        'user_id',
+        'owner',
         'product',
         'selling_price',
         'unit_price',
-        'status'
+        'title',
+        'status',
+        'boss_name',
+        'deadline',
+        'kill_at',
+        'description'
     ];
 
-    public function owner()
-    {
+    protected $casts = [
+        'kill_at' => 'datetime:Y-m-d H:i:s',
+        'deadline' => 'datetime:Y-m-d H:i:s',
+        'created_at' => 'datetime:Y-m-d H:i:s',
+        'Updated_at' => 'datetime:Y-m-d H:i:s',
+    ];
 
-    }
+    public $incrementing = true;
 
-    public function denominator()
-    {
-        return $this->hasMany('');
-    }
+    public $timestamps = true;
+
 }
