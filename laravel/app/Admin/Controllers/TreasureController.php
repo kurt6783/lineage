@@ -8,21 +8,23 @@ use Dcat\Admin\Show;
 use Dcat\Admin\Layout\Row;
 use Dcat\Admin\Layout\Column;
 use Dcat\Admin\Layout\Content;
-use App\Admin\Metrics\Examples;
 use App\Http\Controllers\Controller;
-use Dcat\Admin\Http\Controllers\Dashboard;
 use App\Admin\Repositories\TreasureRepository;
 use Dcat\Admin\Widgets\Tab;
 use Illuminate\Support\Facades\DB;
-use App\Admin\Renderable\UserTable;
-use Dcat\Admin\Models\Administrator;
 
 class TreasureController extends Controller
 {
-    // 页面标题
-    protected $title = '寶物';
+    /**
+     * Set Title
+     */
+    protected $title = '寶物管理';
 
-    // 页面描述信息
+    /**
+     * Set description for following 4 action pages.
+     *
+     * @var array
+     */
     protected $description = [
         'index'  => 'Index',
         'show'   => 'Show',
@@ -30,106 +32,28 @@ class TreasureController extends Controller
         'create' => 'Create',
     ];
 
-    // 指定语言包名称，默认与当前控制器名称相对应
-    protected $translation;
-
-    // 返回页面标题
-    protected function title()
-    {
-        return $this->title ?: admin_trans_label();
-    }
-
-    // 返回描述信息
-    protected function description()
-    {
-        return $this->description;
-    }
-
-    // 数据表格
-    protected function grid()
-    {
-        return Grid::make(new TreasureRepository(), function (Grid $grid) {
-            $grid->setActionClass(Grid\Displayers\Actions::class);
-            $status = request()->status ?? 0;
-            if ($status == '0') {
-                $grid->model()->where('status', '還沒售出');
-            } elseif ($status == '1') {
-                $grid->model()->where('status', '分贓中');
-            } elseif ($status == '2') {
-                $grid->model()->where('status', '結束');
-            }
-            $grid->header(function () use ($status) {
-                $tab = Tab::make();
-                $tab->addLink('還沒售出', '?status=0', $status == '0' ? true : false);
-                $tab->addLink('分贓中', '?status=1', $status == '1' ? true : false);
-                $tab->addLink('結束', '?status=2', $status == '2' ? true : false);
-                return $tab;
-            });
-            $grid->column('id')->sortable();
-            $grid->column('user_id', '持有者')->display(function ($userId) {
-                return DB::table('admin_users')->find($userId)->name;
-            });
-            $grid->column('product');
-            $grid->column('selling_price');
-            $grid->column('unit_price');
-            $grid->column('status');
-        });
-    }
-
-    // 数据详情
-    protected function detail($id)
-    {
-        return Show::make($id, new User(), function (Show $show) {
-            // ...
-        });
-    }
-
-    // 表单
-    protected function form()
-    {
-        return Form::make(new TreasureRepository(), function (Form $form) {
-            $options = DB::table('admin_users')->pluck('name', 'id');
-            $form->display('id');
-            $form->select('user_id', '持有者')
-                ->options($options)
-                ->required();
-            $form->text('product', '寶物名稱');
-            $form->number('selling_price', '金額（稅後）');
-            $form->number('unit_price')->default('100');
-            if ($form->isCreating()) {
-                $form->select('status')->options([
-                    '還沒售出' => '還沒售出'
-                ])->default('還沒售出');
-            } else {
-                $form->select('status')->options([
-                    '還沒售出' => '還沒售出',
-                    '分贓中' => '分贓中', 
-                    '結束' =>'結束'
-                ]);
-            }
-
-            // $form->selectTable('user_id', '分贓者')
-            //     ->title('分贓者')
-            //     ->from(UserTable::make(['id' => $form->getKey()]))
-            //     ->model(Administrator::class, 'id', 'name');
-
-            $form->disableViewCheck();
-            $form->disableEditingCheck();
-            $form->disableCreatingCheck();
-            $form->disableResetButton();
-            $form->disableDeleteButton();
-        });
-    }
-
-    // 列表页
+    /**
+     * Index interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     */
     public function index(Content $content)
     {
         return $content
-            ->title($this->title())
-            ->description($this->description()['index'] ?? trans('admin.list'))
+            ->title($this->title)
+            ->description($this->description()['index'])
             ->body($this->grid());
     }
-
+    
+    /**
+     * Create interface.
+     *
+     * @param Content $content
+     *
+     * @return Content
+     */
     public function create(Content $content)
     {
         return $content
@@ -138,6 +62,14 @@ class TreasureController extends Controller
             ->body($this->form());
     }
 
+    /**
+     * Edit interface.
+     *
+     * @param mixed   $id
+     * @param Content $content
+     *
+     * @return Content
+     */
     public function edit($id, Content $content)
     {
         return $content
@@ -146,18 +78,125 @@ class TreasureController extends Controller
             ->body($this->form($id)->edit($id));
     }
 
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @return mixed
+     */
     public function store()
     {
         return $this->form()->store();
     }
 
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param int $id
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function update($id)
     {
         return $this->form()->update($id);
     }
-
+    
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param int $id
+     *
+     * @return \Illuminate\Http\Response
+     */
     public function destroy($id)
     {
         return $this->form()->destroy($id);
     }
+
+    /**
+     * Get Title
+     *
+     * @return array
+     */
+    protected function title()
+    {
+        return $this->title;
+    }
+
+    /**
+     * Get description for following 4 action pages.
+     *
+     * @return array
+     */
+    protected function description()
+    {
+        return $this->description;
+    }
+
+    /**
+     * Make a grid builder.
+     *
+     * @return Grid
+     */
+    protected function grid()
+    {
+        return Grid::make(
+            new TreasureRepository(), function (Grid $grid) {
+                $grid->setActionClass(Grid\Displayers\Actions::class);
+                $grid->model()->orderBy('kill_at');
+
+                $grid->column('id')->sortable();
+                $grid->column('kill_at', '擊殺時間');
+                $grid->column('boss_name', '怪物名稱');
+                $grid->column('product', '寶物名稱');
+                $grid->column('owner', '持有者');
+                $grid->column('deadline', '最後補登時間');
+                $grid->column('description', '備註')
+                    ->display('公告內容')
+                    ->modal(
+                        function ($modal) {
+                            $modal->title('請將內容公告至Line記事本');
+                            $modal->icon('fa-copy');
+                            return $this->description;
+                        }
+                    );
+
+                // disable tools
+                $grid->disableFilterButton();
+                $grid->disableRefreshButton();
+                $grid->disableBatchActions();
+                $grid->disableRowSelector();
+                $grid->disableViewButton();
+            }
+        );
+    }
+
+
+    /**
+     * Create & Edit Form
+     */
+    protected function form()
+    {
+        return Form::make(
+            new TreasureRepository(), function (Form $form) {
+                $options = DB::table('admin_users')->pluck('name', 'id');
+                $form->display('id');
+                $form->datetime('kill_at', '擊殺時間')
+                    ->format('YYYY-MM-DD HH:mm')->required();
+                $form->text('boss_name', '怪物名稱')->required();
+                $form->text('product', '寶物名稱')->required();
+                $form->select('owner', '持有者')
+                    ->options($options)
+                    ->required();
+
+                // disable tools
+                $form->disableViewButton();
+                $form->disableViewCheck();
+                $form->disableEditingCheck();
+                $form->disableCreatingCheck();
+                $form->disableResetButton();
+                $form->disableDeleteButton();
+            }
+        );
+    }
+
 }
