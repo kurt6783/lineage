@@ -155,8 +155,10 @@ class TreasureController extends Controller
                         function ($modal) {
                             $modal->title('參與人員清單');
                             $modal->icon('fa-users');
-                            $players = Player::whereIn('id', $this->players)->get('name')->pluck('name')->toArray();
-                            return implode('<br>', $players);
+                            if (!is_null($this->players)) {
+                                $players = Player::whereIn('id', $this->players)->get('name')->pluck('name')->toArray();
+                                return implode('<br>', $players);
+                            }
                         }
                     );
                 $grid->column('deadline', '最後補登時間')->sortable();
@@ -226,9 +228,12 @@ class TreasureController extends Controller
                 $form->saving(function (Form $form) {
                     $form->updater_id = Admin::user()->id;
                     $form->deadline = date('Y-m-d H:i:s', strtotime($form->kill_at . '+4 days midnight -1 sec'));
-                    $players = Player::whereIn('id', explode(',', $form->players))->get('name')->pluck('name')->toArray();
                     $owner = Player::where('id', $form->owner)->get('name')->first()->toArray();
-
+                    $players = [];
+                    if (!is_null($form->players)) {
+                        $players = Player::whereIn('id', explode(',', $form->players))->get('name')->pluck('name')->toArray();
+                    }
+                    
                     $description = $form->kill_at . '<br>';
                     $description .= $form->boss_name . '  ' . $form->product . '<br>';
                     $description .= '持有者： ' . $owner['name'] . '<br>';
