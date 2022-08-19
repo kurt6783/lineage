@@ -2,16 +2,14 @@
 
 namespace App\Admin\Controllers;
 
+use Dcat\Admin\Admin;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
-use Dcat\Admin\Show;
-use Dcat\Admin\Layout\Row;
-use Dcat\Admin\Layout\Column;
 use Dcat\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use App\Admin\Repositories\TreasureRepository;
-use Dcat\Admin\Widgets\Tab;
-use Illuminate\Support\Facades\DB;
+use App\Admin\Renderable\PlayerTable;
+use App\Models\Player;
 
 class TreasureController extends Controller
 {
@@ -140,16 +138,28 @@ class TreasureController extends Controller
     protected function grid()
     {
         return Grid::make(
-            new TreasureRepository(), function (Grid $grid) {
+            new TreasureRepository(['ownerInfo']), function (Grid $grid) {
                 $grid->setActionClass(Grid\Displayers\Actions::class);
-                $grid->model()->orderBy('kill_at');
+                $grid->model()->orderBy('id', 'desc');
 
-                $grid->column('id')->sortable();
-                $grid->column('kill_at', '擊殺時間');
+                $grid->column('id', '#')->sortable();
+                $grid->column('kill_at', '擊殺時間')->display(function(){
+                        return date_format($this->kill_at, 'Y-m-d H:i');
+                    })->sortable();
                 $grid->column('boss_name', '怪物名稱');
                 $grid->column('product', '寶物名稱');
-                $grid->column('owner', '持有者');
-                $grid->column('deadline', '最後補登時間');
+                $grid->column('ownerInfo.name', '持有者');
+                $grid->column('players', '參與人數')->display(function(){
+                        return !is_null($this->players) ? count($this->players) : 0;
+                    })->modal(
+                        function ($modal) {
+                            $modal->title('參與人員清單');
+                            $modal->icon('fa-users');
+                            $players = Player::whereIn('id', $this->players)->get('name')->pluck('name')->toArray();
+                            return implode('<br>', $players);
+                        }
+                    );
+                $grid->column('deadline', '最後補登時間')->sortable();
                 $grid->column('description', '備註')
                     ->display('公告內容')
                     ->modal(
@@ -159,6 +169,11 @@ class TreasureController extends Controller
                             return $this->description;
                         }
                     );
+                $grid->column('updater_id', '異動人')->display(function(){
+                    $userModel = config('admin.database.users_model');
+                    return $userModel::find($this->updater_id)->name;
+                });
+                $grid->column('updated_at', '異動時間');
 
                 // disable tools
                 $grid->disableFilterButton();
@@ -178,15 +193,49 @@ class TreasureController extends Controller
     {
         return Form::make(
             new TreasureRepository(), function (Form $form) {
-                $options = DB::table('admin_users')->pluck('name', 'id');
-                $form->display('id');
+
+                $form->display('id', '#');
                 $form->datetime('kill_at', '擊殺時間')
                     ->format('YYYY-MM-DD HH:mm')->required();
                 $form->text('boss_name', '怪物名稱')->required();
                 $form->text('product', '寶物名稱')->required();
-                $form->select('owner', '持有者')
-                    ->options($options)
+
+                $form->selectTable('owner', '持有者')
+                    ->title('持有者')
+                    ->dialogWidth('50%')
+                    ->from(PlayerTable::make())
+                    ->model(Player::class, 'id', 'name')
                     ->required();
+
+                $form->multipleSelectTable('players', '參與人員')
+                    ->title('參與人員')
+                    ->dialogWidth('50%')
+                    ->from(PlayerTable::make())
+                    ->model(Player::class, 'id', 'name');
+                
+                $form->hidden('deadline');
+                $form->hidden('description');
+                $form->hidden('updater_id')->default(Admin::user()->id);
+
+                if ($form->isCreating()) {
+                    $form->hidden('creator_id')->default(Admin::user()->id);
+                    $form->saving(function (Form $form) {
+                        $form->creator_id = Admin::user()->id;
+                    });
+                }
+                $form->saving(function (Form $form) {
+                    $form->updater_id = Admin::user()->id;
+                    $form->deadline = date('Y-m-d H:i:s', strtotime($form->kill_at . '+4 days midnight -1 sec'));
+                    $players = Player::whereIn('id', explode(',', $form->players))->get('name')->pluck('name')->toArray();
+                    $owner = Player::where('id', $form->owner)->get('name')->first()->toArray();
+
+                    $description = $form->kill_at . '<br>';
+                    $description .= $form->boss_name . '  ' . $form->product . '<br>';
+                    $description .= '持有者： ' . $owner['name'] . '<br>';
+                    $description .= '最後補登時間： ' . $form->deadline . '<br>';
+                    $description .= '<br>參與人員：<br>' . implode('<br>', $players) . '<br>';
+                    $form->description = $description;
+                });
 
                 // disable tools
                 $form->disableViewButton();

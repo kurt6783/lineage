@@ -28,6 +28,7 @@ class Treasure extends Model
     ];
 
     protected $casts = [
+        'players' => 'json',
         'kill_at' => 'datetime:Y-m-d H:i:s',
         'deadline' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
@@ -38,4 +39,8 @@ class Treasure extends Model
 
     public $timestamps = true;
 
+    public function ownerInfo()
+    {
+        return $this->belongsTo(Player::class, 'owner', 'id');
+    }
 }
