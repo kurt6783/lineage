@@ -322,7 +322,7 @@ return [
         'color' => 'default',
 
         // sidebar-separate
-        'body_class' => 'dark-mode',
+        'body_class' => 'default',
 
         'horizontal_menu' => false,
 
