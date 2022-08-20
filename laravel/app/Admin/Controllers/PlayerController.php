@@ -101,9 +101,20 @@ class PlayerController extends Controller
     protected function form()
     {
         return Form::make(new PlayerRepository(), function (Form $form) {
-            $form->text('name', 'ID');
-            $form->text('profession', '職業');
-            $form->text('blood_alliance', '血盟');
+            $form->text('name', '角色名稱');
+            $form->select('profession', '職業')
+                ->options([
+                    '王族' => '王族',
+                    '騎士' => '騎士',
+                    '黑妖' => '黑妖',
+                    '妖精' => '妖精',
+                    '法師' => '法師',
+                ]);
+            $form->select('blood_alliance', '血盟')
+                ->options([
+                    '鳥盟' => '鳥盟',
+                    '夜語' => '夜語',
+                ]);
 
             $form->disableViewCheck();
             $form->disableEditingCheck();
