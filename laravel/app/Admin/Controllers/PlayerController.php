@@ -113,7 +113,7 @@ class PlayerController extends Controller
             $form->select('blood_alliance', '血盟')
                 ->options([
                     '鳥盟' => '鳥盟',
-                    '夜語' => '夜語',
+                    '夜雨' => '夜雨',
                 ]);
 
             $form->disableViewCheck();
