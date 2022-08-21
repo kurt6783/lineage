@@ -127,8 +127,7 @@ class RateController extends Controller
     {
         return Show::make($id, new RateRepository(), function (Show $show) {
             $show->name;
-            $show->profession;
-            $show->blood_alliance;
+            $show->proportion;
         });
     }
 }
