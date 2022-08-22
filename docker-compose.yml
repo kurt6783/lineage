@@ -40,4 +40,15 @@ services:
       - ./my_dbdata:/var/lib/postgresql/data
     networks: 
       - lineage
-  
+  pgadmin:
+    image: "dpage/pgadmin4"
+    container_name: pgadmin
+    depends_on:
+      - postgresql
+    ports:
+      - "5051:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: k0911245920@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: testing123
+    networks: 
+      - lineage

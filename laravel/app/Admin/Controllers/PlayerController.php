@@ -92,9 +92,9 @@ class PlayerController extends Controller
     {
         return Grid::make(new PlayerRepository(), function (Grid $grid) {
             $grid->setActionClass(Grid\Displayers\Actions::class);
-            $grid->column('name');
-            $grid->column('profession');
-            $grid->column('blood_alliance');
+            $grid->column('name')->sortable();
+            $grid->column('profession')->sortable();
+            $grid->column('blood_alliance')->sortable();
         });
     }
 
