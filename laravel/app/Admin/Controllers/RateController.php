@@ -126,8 +126,8 @@ class RateController extends Controller
     protected function detail($id)
     {
         return Show::make($id, new RateRepository(), function (Show $show) {
-            $show->name;
-            $show->proportion;
+            $show->name('名目');
+            $show->proportion('比例（％）');
 
             $show->disableDeleteButton();
         });
