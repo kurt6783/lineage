@@ -128,6 +128,8 @@ class RateController extends Controller
         return Show::make($id, new RateRepository(), function (Show $show) {
             $show->name;
             $show->proportion;
+
+            $show->disableDeleteButton();
         });
     }
 }
