@@ -5,6 +5,7 @@ namespace App\Admin\Controllers;
 use Dcat\Admin\Admin;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
+use Dcat\Admin\Show;
 use Dcat\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use App\Admin\Repositories\TreasureRepository;
@@ -43,6 +44,22 @@ class TreasureController extends Controller
             ->title($this->title)
             ->description($this->description()['index'])
             ->body($this->grid());
+    }
+        
+    /**
+     * Show interface.
+     *
+     * @param mixed   $id
+     * @param Content $content
+     *
+     * @return Content
+     */
+    public function show($id, Content $content)
+    {
+        return $content
+            ->title($this->title())
+            ->description($this->description()['show'])
+            ->body($this->detail($id));
     }
     
     /**
@@ -171,22 +188,48 @@ class TreasureController extends Controller
                             return $this->description;
                         }
                     );
-                $grid->column('updater_id', '異動人')->display(function(){
-                    $userModel = config('admin.database.users_model');
-                    return $userModel::find($this->updater_id)->name;
-                });
-                $grid->column('updated_at', '異動時間');
-
                 // disable tools
                 $grid->disableFilterButton();
                 $grid->disableRefreshButton();
                 $grid->disableBatchActions();
                 $grid->disableRowSelector();
-                $grid->disableViewButton();
             }
         );
     }
 
+    protected function detail($id)
+    {
+        return Show::make($id, new TreasureRepository(['ownerInfo']), function (Show $show) {
+            $show->id('#');
+            $show->kill_at('擊殺時間')->as(function () {
+                    return date_format($this->kill_at, 'Y-m-d H:i');
+                });
+            $show->boss_name('怪物名稱');
+            $show->product('寶物名稱');
+            $show->field('owner_info.name', '持有者');
+
+            $show->deadline('最後補登時間');
+            $show->players('參與人員')->as(function () {
+                    $players = Player::whereIn('id', $this->players)->get('name')->pluck('name')->toArray();
+                    return $players;
+                })->label();
+            
+            $show->divider();
+            $show->updater_id('異動人')->as(function () {
+                $userModel = config('admin.database.users_model');
+                return $userModel::find($this->updater_id)->name;
+            });
+            $show->updated_at('異動時間');
+            $show->creator_id('新增人')->as(function () {
+                $userModel = config('admin.database.users_model');
+                return $userModel::find($this->creator_id)->name;
+            });
+            $show->created_at('新增時間');
+
+            //tools
+            $show->disableDeleteButton();
+        });
+    }
 
     /**
      * Create & Edit Form
