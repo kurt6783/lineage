@@ -57,6 +57,11 @@ class Treasure extends Model
 
     public $timestamps = true;
 
+    public function getSellingPriceAttribute()
+    {
+        return $this->attributes['selling_price'] ?? '-';
+    }
+
     public function ownerInfo()
     {
         return $this->belongsTo(Player::class, 'owner', 'id');

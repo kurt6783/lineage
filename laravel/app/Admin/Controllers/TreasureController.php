@@ -167,6 +167,7 @@ class TreasureController extends Controller
                     })->sortable();
                 $grid->column('boss_name', '怪物名稱');
                 $grid->column('product', '寶物名稱');
+                $grid->column('selling_price', '寶物售價');
                 $grid->column('status', '寶物狀態')->display(function () {
                     return Treasure::statusTranslate[$this->status];
                 });
@@ -208,6 +209,7 @@ class TreasureController extends Controller
             });
             $show->boss_name('怪物名稱');
             $show->product('寶物名稱');
+            $show->selling_price('寶物售價');
             $show->status('寶物狀態')->as(function () {
                 return Treasure::statusTranslate[$this->status];
             });
