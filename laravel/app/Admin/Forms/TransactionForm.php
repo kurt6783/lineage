@@ -30,7 +30,7 @@ class TransactionForm extends Form implements LazyRenderable
 
         $treasure->update([
             'owner' => $player->id,
-            'selling_price' => $input['price'],
+            'selling_price' => $input['selling_price'],
             'updater_id' => $accountant->id,
             'accountant_id' => $accountant->id,
             'sell_at' => $input['sell_at'],
@@ -53,7 +53,7 @@ class TransactionForm extends Form implements LazyRenderable
             ->from(PlayerTable::make())
             ->model(Player::class, 'id', 'name')
             ->required();
-        $this->number('price', '售價');
+        $this->number('selling_price', '售價');
         $this->selectTable('accountant_id', '收鑽者')
             ->title('收鑽者')
             ->dialogWidth('50%')
@@ -72,8 +72,19 @@ class TransactionForm extends Form implements LazyRenderable
      */
     public function default()
     {
-        return [
+        $treasure = Treasure::findOrFail($this->payload['id']);
 
-        ];
+        $result = [];
+
+        if ($treasure->status == Treasure::status['SOLD']) {
+            $result = [
+                'buyer_id' => $treasure->owner,
+                'selling_price' => $treasure->selling_price,
+                'accountant_id' => $treasure->accountant_id,
+                'sell_at' => $treasure->sell_at,
+            ];
+        }
+
+        return $result;
     }
 }
