@@ -26,6 +26,8 @@ Route::group(
             $router->delete('/{id}', 'PlayerController@destroy');
         });
 
+        $router->resource('/rates', 'RateController');
+
         //寶物管理
         $router->resource('/treasure', 'TreasureController');
 

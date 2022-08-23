@@ -5,22 +5,15 @@ namespace App\Admin\Controllers;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
-use Dcat\Admin\Layout\Row;
-use Dcat\Admin\Layout\Column;
+use Dcat\Admin\Admin;
 use Dcat\Admin\Layout\Content;
-use App\Admin\Metrics\Examples;
 use App\Http\Controllers\Controller;
-use Dcat\Admin\Http\Controllers\Dashboard;
-use App\Admin\Repositories\PlayerRepository;
-use Dcat\Admin\Widgets\Tab;
-use Illuminate\Support\Facades\DB;
-use App\Admin\Renderable\UserTable;
-use Dcat\Admin\Models\Administrator;
+use App\Admin\Repositories\RateRepository;
 
-class PlayerController extends Controller
+class RateController extends Controller
 {
 
-    protected $title = '玩家角色';
+    protected $title = '分鑽比例';
 
     protected $description = [
         'index'  => 'Index',
@@ -90,31 +83,37 @@ class PlayerController extends Controller
 
     protected function grid()
     {
-        return Grid::make(new PlayerRepository(), function (Grid $grid) {
+        return Grid::make(new RateRepository(), function (Grid $grid) {
             $grid->setActionClass(Grid\Displayers\Actions::class);
-            $grid->column('name')->sortable();
-            $grid->column('profession')->sortable();
-            $grid->column('blood_alliance')->sortable();
+            $grid->column('name', '名目');
+            $grid->column('proportion', '比例（％）');
+            $grid->column('updater_id', '異動人')
+                ->display(function () {
+                    $userModel = config('admin.database.users_model');
+                    return $userModel::find($this->updater_id)->name;
+                });
+            $grid->column('updated_at', '異動時間');
         });
     }
 
     protected function form()
     {
-        return Form::make(new PlayerRepository(), function (Form $form) {
-            $form->text('name', '角色名稱');
-            $form->select('profession', '職業')
-                ->options([
-                    '王族' => '王族',
-                    '騎士' => '騎士',
-                    '黑妖' => '黑妖',
-                    '妖精' => '妖精',
-                    '法師' => '法師',
-                ]);
-            $form->select('blood_alliance', '血盟')
-                ->options([
-                    '鳥盟' => '鳥盟',
-                    '夜雨' => '夜雨',
-                ]);
+        return Form::make(new RateRepository(), function (Form $form) {
+            $form->text('name', '名目');
+            $form->number('proportion', '比例（％）');
+
+            $form->hidden('updater_id')->default(Admin::user()->id);
+
+            if ($form->isCreating()) {
+                $form->hidden('creator_id')->default(Admin::user()->id);
+                $form->saving(function (Form $form) {
+                    $form->creator_id = Admin::user()->id;
+                });
+            }
+
+            $form->saving(function (Form $form) {
+                $form->updater_id = Admin::user()->id;
+            });
 
             $form->disableViewCheck();
             $form->disableEditingCheck();
@@ -126,10 +125,11 @@ class PlayerController extends Controller
 
     protected function detail($id)
     {
-        return Show::make($id, new PlayerRepository(), function (Show $show) {
-            $show->name;
-            $show->profession;
-            $show->blood_alliance;
+        return Show::make($id, new RateRepository(), function (Show $show) {
+            $show->name('名目');
+            $show->proportion('比例（％）');
+
+            $show->disableDeleteButton();
         });
     }
 }
