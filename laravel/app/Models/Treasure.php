@@ -26,6 +26,7 @@ class Treasure extends Model
         'kill_at',
         'description',
         'accountant_id',
+        'sell_at',
     ];
 
     protected $casts = [
@@ -42,6 +43,14 @@ class Treasure extends Model
         'SOLD' => 2,
         'ALLOCATING' => 3,
         'FINISH' => 4,
+    ];
+
+    const statusTranslate = [
+        0 => '登記中',
+        1 => '販售中',
+        2 => '已售出',
+        3 => '分鑽中',
+        4 => '結案',
     ];
 
     public $incrementing = true;

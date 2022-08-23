@@ -15,6 +15,7 @@ class AddTransactionDataToTreasuresTable extends Migration
     {
         Schema::table('treasures', function (Blueprint $table) {
             $table->integer('accountant_id')->nullable();
+            $table->timestamp('sell_at')->nullable();
             $table->dropColumn('unit_price');
         });
     }
@@ -28,6 +29,7 @@ class AddTransactionDataToTreasuresTable extends Migration
     {
         Schema::table('treasures', function (Blueprint $table) {
             $table->dropColumn('accountant_id');
+            $table->dropColumn('sell_at');
             $table->integer('unit_price')->nullable();
         });
     }

@@ -33,6 +33,7 @@ class TransactionForm extends Form implements LazyRenderable
             'selling_price' => $input['price'],
             'updater_id' => $accountant->id,
             'accountant_id' => $accountant->id,
+            'sell_at' => $input['sell_at'],
             'status' => Treasure::status['SOLD'],
         ]);
 
@@ -58,6 +59,9 @@ class TransactionForm extends Form implements LazyRenderable
             ->dialogWidth('50%')
             ->from(UserTable::make())
             ->model(Administrator::class, 'id', 'name')
+            ->required();
+        $this->datetime('sell_at', '販售時間')
+            ->format('YYYY-MM-DD HH:mm')
             ->required();
     }
 
