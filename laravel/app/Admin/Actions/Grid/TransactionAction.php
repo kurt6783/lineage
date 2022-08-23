@@ -37,7 +37,7 @@ class TransactionAction extends RowAction
 
         return Modal::make()
             ->lg()
-            ->title('test1')
+            ->title('寶物交易')
             ->body($form)
             ->button($this->title);
     }
