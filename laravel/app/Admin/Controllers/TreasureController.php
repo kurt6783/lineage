@@ -160,8 +160,6 @@ class TreasureController extends Controller
         Admin::script($this->script());
 
         return Grid::make(new TreasureRepository(['ownerInfo']), function (Grid $grid) {
-                $grid->setActionClass(Grid\Displayers\Actions::class);
-
                 $grid->model()->orderBy('id', 'desc');
 
                 $grid->column('id', '#')->sortable();
