@@ -24,7 +24,9 @@ class Treasure extends Model
         'boss_name',
         'deadline',
         'kill_at',
-        'description'
+        'description',
+        'accountant_id',
+        'sell_at',
     ];
 
     protected $casts = [
@@ -35,9 +37,30 @@ class Treasure extends Model
         'Updated_at' => 'datetime:Y-m-d H:i:s',
     ];
 
+    const status = [
+        'CALLING' => 0,
+        'SELLING' => 1,
+        'SOLD' => 2,
+        'ALLOCATING' => 3,
+        'FINISH' => 4,
+    ];
+
+    const statusTranslate = [
+        0 => '登記中',
+        1 => '販售中',
+        2 => '已售出',
+        3 => '分鑽中',
+        4 => '結案',
+    ];
+
     public $incrementing = true;
 
     public $timestamps = true;
+
+    public function getSellingPriceAttribute()
+    {
+        return $this->attributes['selling_price'] ?? '-';
+    }
 
     public function ownerInfo()
     {
