@@ -6,11 +6,13 @@ use Dcat\Admin\Admin;
 use Dcat\Admin\Form;
 use Dcat\Admin\Grid;
 use Dcat\Admin\Show;
+use App\Admin\Actions\Grid\TransactionAction;
 use Dcat\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use App\Admin\Repositories\TreasureRepository;
 use App\Admin\Renderable\PlayerTable;
 use App\Models\Player;
+
 
 class TreasureController extends Controller
 {
@@ -156,7 +158,6 @@ class TreasureController extends Controller
     {
         return Grid::make(
             new TreasureRepository(['ownerInfo']), function (Grid $grid) {
-                $grid->setActionClass(Grid\Displayers\Actions::class);
                 $grid->model()->orderBy('id', 'desc');
 
                 $grid->column('id', '#')->sortable();
@@ -188,6 +189,7 @@ class TreasureController extends Controller
                             return $this->description;
                         }
                     );
+                $grid->actions(new TransactionAction());
                 // disable tools
                 $grid->disableFilterButton();
                 $grid->disableRefreshButton();

@@ -24,7 +24,8 @@ class Treasure extends Model
         'boss_name',
         'deadline',
         'kill_at',
-        'description'
+        'description',
+        'accountant_id',
     ];
 
     protected $casts = [
@@ -33,6 +34,14 @@ class Treasure extends Model
         'deadline' => 'datetime:Y-m-d H:i:s',
         'created_at' => 'datetime:Y-m-d H:i:s',
         'Updated_at' => 'datetime:Y-m-d H:i:s',
+    ];
+
+    const status = [
+        'CALLING' => 0,
+        'SELLING' => 1,
+        'SOLD' => 2,
+        'ALLOCATING' => 3,
+        'FINISH' => 4,
     ];
 
     public $incrementing = true;
