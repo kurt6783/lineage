@@ -157,8 +157,9 @@ class TreasureController extends Controller
      */
     protected function grid()
     {
-        return Grid::make(
-            new TreasureRepository(['ownerInfo']), function (Grid $grid) {
+        Admin::script($this->script());
+
+        return Grid::make(new TreasureRepository(['ownerInfo']), function (Grid $grid) {
                 $grid->model()->orderBy('id', 'desc');
 
                 $grid->column('id', '#')->sortable();
@@ -186,11 +187,13 @@ class TreasureController extends Controller
                 $grid->column('description', '備註')
                     ->display('公告內容')
                     ->modal(function ($modal) {
-                        $modal->title('請將內容公告至Line記事本');
-                        $modal->icon('fa-copy');
+                        $modal->title('請將內容公告至Line記事本 <a style="cursor: pointer" id="copyBtn" href="javascript:void(0)"><i title="Copy" class="fa fa-copy"></i></a>');
+                        $modal->icon('fa-file-text-o');
                         return $this->description;
                     });
+                    
                 $grid->actions(new TransactionAction());
+
                 // disable tools
                 $grid->disableFilterButton();
                 $grid->disableRefreshButton();
@@ -242,6 +245,7 @@ class TreasureController extends Controller
     protected function form()
     {
         return Form::make(new TreasureRepository(), function (Form $form) {
+
             $form->display('id', '#');
             $form->datetime('kill_at', '擊殺時間')
                 ->format('YYYY-MM-DD HH:mm')->required();
@@ -300,4 +304,28 @@ class TreasureController extends Controller
         });
     }
 
+    private function script()
+    {
+        return <<<JS
+            if(!window.isCopyScriptLoad){
+                window.isCopyScriptLoad = true;
+                $(document).on('click', '#copyBtn', function(){
+                    var element = $(this).closest('.modal-content').find('.modal-body');
+                    var copyElement = $(element).clone().find('br').prepend('\\r\\n').end();
+                    copyToClipboard(copyElement);
+                    Dcat.success('複製成功', null, {
+                        timeOut: 5000, // 5秒后自动消失
+                    });
+                });
+
+                function copyToClipboard(element) {
+                    var temp = $("<textarea>");
+                    $("body").append(temp);
+                    temp.val($(element).text()).select();
+                    document.execCommand("copy");
+                    temp.remove();
+                }
+            }
+            JS;
+    }
 }
