@@ -18,6 +18,8 @@ class CreateTreasureImagesTable extends Migration
             $table->bigInteger('treasure_id');
             $table->string('path', 300);
             $table->timestamps();
+            
+            $table->unique('path');
         });
     }
 
