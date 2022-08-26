@@ -66,4 +66,9 @@ class Treasure extends Model
     {
         return $this->belongsTo(Player::class, 'owner', 'id');
     }
+
+    public function images()
+    {
+        return $this->hasMany(TreasureImage::class, 'treasure_id', 'id');
+    }
 }

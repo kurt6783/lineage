@@ -11,9 +11,11 @@ use Dcat\Admin\Layout\Content;
 use App\Http\Controllers\Controller;
 use App\Models\Treasure;
 use App\Admin\Repositories\TreasureRepository;
+use App\Admin\Repositories\TreasureImageRepository;
 use App\Admin\Renderable\PlayerTable;
 use App\Models\Player;
-
+use App\Models\TreasureImage;
+use Illuminate\Support\Facades\DB;
 
 class TreasureController extends Controller
 {
@@ -159,7 +161,9 @@ class TreasureController extends Controller
     {
         Admin::script($this->script());
 
-        return Grid::make(new TreasureRepository(['ownerInfo']), function (Grid $grid) {
+        return Grid::make(
+            new TreasureRepository(['ownerInfo', 'images']), function (Grid $grid) {
+
                 $grid->model()->orderBy('id', 'desc');
 
                 $grid->column('id', '#')->sortable();
@@ -191,9 +195,8 @@ class TreasureController extends Controller
                         $modal->icon('fa-file-text-o');
                         return $this->description;
                     });
-                    
-                $grid->actions(new TransactionAction());
 
+                $grid->actions(new TransactionAction());
                 // disable tools
                 $grid->disableFilterButton();
                 $grid->disableRefreshButton();
@@ -205,13 +208,14 @@ class TreasureController extends Controller
 
     protected function detail($id)
     {
-        return Show::make($id, new TreasureRepository(['ownerInfo']), function (Show $show) {
+        return Show::make($id, new TreasureRepository(['ownerInfo', 'images']), function (Show $show) {
             $show->id('#');
             $show->kill_at('擊殺時間')->as(function () {
                 return date_format($this->kill_at, 'Y-m-d H:i');
             });
             $show->boss_name('怪物名稱');
             $show->product('寶物名稱');
+            $show->field('images', '畫面截圖')->pluck('path')->image('', 100, 100);
             $show->selling_price('寶物售價');
             $show->status('寶物狀態')->as(function () {
                 return Treasure::statusTranslate[$this->status];
@@ -244,13 +248,46 @@ class TreasureController extends Controller
      */
     protected function form()
     {
-        return Form::make(new TreasureRepository(), function (Form $form) {
-
+        return Form::make(new TreasureRepository(['images']), function (Form $form) {
             $form->display('id', '#');
             $form->datetime('kill_at', '擊殺時間')
                 ->format('YYYY-MM-DD HH:mm')->required();
             $form->text('boss_name', '怪物名稱')->required();
             $form->text('product', '寶物名稱')->required();
+            $form->multipleImage('images', '畫面截圖')
+                ->disk('public')
+                ->move('lineage/treasures')
+                ->accept('jpg,png,jpeg')
+                ->limit(5, '上傳最多5個檔案')
+                ->help('最多5個，限制檔案類型：.jpg .png .jpeg', 'fa-image')
+                ->autoUpload()
+                ->sortable()
+                ->saving(function ($value) use ($form) {
+                    // 删除圖片
+                    if ($form->isEditing() && request()->filled('_file_del_')) {
+                        TreasureImage::where('path', request()->input('_file_del_'))->delete();
+                    }
+
+                    // 上傳圖片
+                    if ($value) {
+                        $insert_data = [];
+                        foreach ($value as $val) {
+                            $insert_data[] = [
+                                'path' => $val,
+                                'treasure_id' => $form->model()->id
+                            ];
+                        }
+                        DB::table('treasure_images')->insertOrIgnore($insert_data, ['path']);
+                    }
+                    return $form->response()->success('成功');
+                })
+                ->customFormat(function ($v) {
+                    if (! $v) {
+                        return;
+                    }
+                    return array_column($v ,'path');
+                });
+
             if (!$form->isCreating()) {
                 $form->select('status', '寶物狀態')
                     ->options(Treasure::statusTranslate);
@@ -280,18 +317,21 @@ class TreasureController extends Controller
             $form->saving(function (Form $form) {
                 $form->updater_id = Admin::user()->id;
                 $form->deadline = date('Y-m-d H:i:s', strtotime($form->kill_at . '+4 days midnight -1 sec'));
-                $owner = Player::where('id', $form->owner)->get('name')->first()->toArray();
-                $players = [];
-                if (!is_null($form->players)) {
-                    $players = Player::whereIn('id', explode(',', $form->players))->get('name')->pluck('name')->toArray();
+
+                if(!is_null($form->owner)){
+                    $owner = Player::where('id', $form->owner)->get('name')->first()->toArray();
+                    $players = [];
+                    if (!is_null($form->players)) {
+                        $players = Player::whereIn('id', explode(',', $form->players))->get('name')->pluck('name')->toArray();
+                    }
+                    
+                    $description = $form->kill_at . '<br>';
+                    $description .= $form->boss_name . '  ' . $form->product . '<br>';
+                    $description .= '持有者： ' . $owner['name'] . '<br>';
+                    $description .= '最後補登時間： ' . $form->deadline . '<br>';
+                    $description .= '<br>參與人員：<br>' . implode('<br>', $players) . '<br>';
+                    $form->description = $description;
                 }
-                
-                $description = $form->kill_at . '<br>';
-                $description .= $form->boss_name . '  ' . $form->product . '<br>';
-                $description .= '持有者： ' . $owner['name'] . '<br>';
-                $description .= '最後補登時間： ' . $form->deadline . '<br>';
-                $description .= '<br>參與人員：<br>' . implode('<br>', $players) . '<br>';
-                $form->description = $description;
             });
 
             // disable tools
