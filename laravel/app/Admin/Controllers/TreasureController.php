@@ -195,7 +195,6 @@ class TreasureController extends Controller
                         $modal->icon('fa-file-text-o');
                         return $this->description;
                     });
-                $grid->column('images', '畫面截圖')->pluck('path')->image('', 100, 100);
 
                 $grid->actions(new TransactionAction());
                 // disable tools
